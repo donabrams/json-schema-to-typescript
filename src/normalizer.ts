@@ -28,7 +28,7 @@ rules.set('Default additionalProperties to false', (schema, rootSchema) => {
   return schema
 })
 
-rules.set('Default top level `id`', (schema, rootSchema, fileName) => {
+rules.set('Default top level `$id`', (schema, rootSchema, fileName) => {
   if (!schema['$id'] && stringify(schema) === stringify(rootSchema)) {
     schema['$id'] = toSafeString(justName(fileName))
   }
