@@ -14,14 +14,6 @@ rules.set('Destructure unary types', schema => {
   return schema
 })
 
-/* TODO: make consts flat???
-rules.set('Flatten out consts', schema => {
-  if (schema.type && Array.isArray(schema.type) && schema.type.length === 1) {
-    schema.type = schema.type[0]
-  }
-  return schema
-})*/
-
 rules.set('Add empty `required` property if none is defined', (schema, rootSchema) => {
   if (stringify(schema) === stringify(rootSchema) && !('required' in schema)) {
     schema.required = []
