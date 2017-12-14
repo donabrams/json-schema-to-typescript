@@ -8,6 +8,7 @@ export function typeOfSchema(schema: JSONSchema): SCHEMA_TYPE {
   if (schema.allOf) return 'ALL_OF'
   if (schema.anyOf) return 'ANY_OF'
   if (schema.oneOf) return 'ONE_OF'
+  if (schema.const) return 'CONST'
   if (schema.items) return 'TYPED_ARRAY'
   if (schema.enum && schema.tsEnumNames) return 'NAMED_ENUM'
   if (schema.enum) return 'UNNAMED_ENUM'

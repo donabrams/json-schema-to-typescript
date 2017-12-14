@@ -14,6 +14,14 @@ rules.set('Destructure unary types', schema => {
   return schema
 })
 
+/* TODO: make consts flat???
+rules.set('Flatten out consts', schema => {
+  if (schema.type && Array.isArray(schema.type) && schema.type.length === 1) {
+    schema.type = schema.type[0]
+  }
+  return schema
+})*/
+
 rules.set('Add empty `required` property if none is defined', (schema, rootSchema) => {
   if (stringify(schema) === stringify(rootSchema) && !('required' in schema)) {
     schema.required = []
@@ -21,24 +29,16 @@ rules.set('Add empty `required` property if none is defined', (schema, rootSchem
   return schema
 })
 
-rules.set('Transform `required`=false to `required`=[]', (schema, rootSchema) => {
-  if (stringify(schema) === stringify(rootSchema) && schema.required === false) {
-    schema.required = []
-  }
-  return schema
-})
-
-// TODO: default to empty schema (as per spec) instead
-rules.set('Default additionalProperties to true', (schema, rootSchema) => {
+rules.set('Default additionalProperties to false', (schema, rootSchema) => {
   if (stringify(schema) === stringify(rootSchema) && !('additionalProperties' in schema)) {
-    schema.additionalProperties = true
+    schema.additionalProperties = false
   }
   return schema
 })
 
 rules.set('Default top level `id`', (schema, rootSchema, fileName) => {
-  if (!schema.id && stringify(schema) === stringify(rootSchema)) {
-    schema.id = toSafeString(justName(fileName))
+  if (!schema['$id'] && stringify(schema) === stringify(rootSchema)) {
+    schema['$id'] = toSafeString(justName(fileName))
   }
   return schema
 })

@@ -141,6 +141,7 @@ function generateType(ast: AST, options: Options): string {
       return type.endsWith('"') ? '(' + type + ')[]' : type + '[]'
     })()
     case 'BOOLEAN': return 'boolean'
+    case 'CONST': return JSON.stringify(ast.params)
     case 'INTERFACE': return generateInterface(ast, options)
     case 'INTERSECTION': return generateSetOperation(ast, options)
     case 'LITERAL': return JSON.stringify(ast.params)
@@ -209,7 +210,6 @@ function generateStandaloneEnum(ast: TEnum, options: Options): string {
 function generateStandaloneInterface(ast: TNamedInterface, options: Options): string {
   return (hasComment(ast) ? generateComment(ast.comment) + '\n' : '')
     + `export interface ${toSafeString(ast.standaloneName)} `
-    + (ast.superTypes.length > 0 ? `extends ${ast.superTypes.map(superType => toSafeString(superType.standaloneName)).join(', ')} ` : '')
     + generateInterface(ast, options)
 }
 
@@ -235,5 +235,4 @@ function escapeKeyName(keyName: string): string {
 function getSuperTypesAndParams(ast: TInterface): AST[] {
   return ast.params
     .map(param => param.ast)
-    .concat(ast.superTypes)
 }

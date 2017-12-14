@@ -1,8 +1,8 @@
-import { JSONSchema4Type } from 'json-schema'
+import { JSONSchema6Type } from 'json-schema'
 
 export type AST_TYPE = AST['type']
 
-export type AST = TAny | TArray | TBoolean | TEnum | TInterface | TNamedInterface
+export type AST = TAny | TArray | TBoolean | TConst | TEnum | TInterface | TNamedInterface
   | TIntersection | TLiteral | TNumber | TNull | TObject | TReference
   | TString | TTuple | TUnion
 
@@ -31,6 +31,11 @@ export interface TAny extends AbstractAST {
   type: 'ANY'
 }
 
+export interface TConst extends AbstractAST {
+  type: 'CONST'
+  params: string | number | boolean | object | any[] | null | undefined
+}
+
 export interface TArray extends AbstractAST {
   type: 'ARRAY'
   params: AST
@@ -54,14 +59,12 @@ export interface TEnumParam {
 export interface TInterface extends AbstractAST {
   type: 'INTERFACE'
   params: TInterfaceParam[]
-  superTypes: TNamedInterface[]
 }
 
 export interface TNamedInterface extends AbstractAST {
   standaloneName: string
   type: 'INTERFACE'
   params: TInterfaceParam[]
-  superTypes: TNamedInterface[]
 }
 
 export interface TInterfaceParam {
@@ -78,7 +81,7 @@ export interface TIntersection extends AbstractAST {
 }
 
 export interface TLiteral extends AbstractAST {
-  params: JSONSchema4Type
+  params: JSONSchema6Type
   type: 'LITERAL'
 }
 

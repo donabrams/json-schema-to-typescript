@@ -1,23 +1,23 @@
 import { whiteBright } from 'cli-color'
-import { JSONSchema4Type, JSONSchema4TypeName } from 'json-schema'
+import { JSONSchema6Type, JSONSchema6TypeName } from 'json-schema'
 import { findKey, includes, isPlainObject, map } from 'lodash'
 import { Options } from './'
 import { typeOfSchema } from './typeOfSchema'
-import { AST, hasStandaloneName, T_ANY, T_ANY_ADDITIONAL_PROPERTIES, TInterface, TInterfaceParam, TNamedInterface } from './types/AST'
+import { AST, T_ANY, T_ANY_ADDITIONAL_PROPERTIES, TInterface, TInterfaceParam } from './types/AST'
 import { JSONSchema, JSONSchemaWithDefinitions, SchemaSchema } from './types/JSONSchema'
 import { error, generateName, log } from './utils'
 
-export type Processed = Map<JSONSchema | JSONSchema4Type, AST>
+export type Processed = Map<JSONSchema | JSONSchema6Type, AST>
 
 export type UsedNames = Set<string>
 
 export function parse(
-  schema: JSONSchema | JSONSchema4Type,
+  schema: JSONSchema | JSONSchema6Type,
   options: Options,
   rootSchema = schema as JSONSchema,
   keyName?: string,
   isSchema = true,
-  processed: Processed = new Map<JSONSchema | JSONSchema4Type, AST>(),
+  processed: Processed = new Map<JSONSchema | JSONSchema6Type, AST>(),
   usedNames = new Set<string>()
 ): AST {
 
@@ -42,7 +42,7 @@ export function parse(
 }
 
 function parseLiteral(
-  schema: JSONSchema4Type,
+  schema: JSONSchema6Type,
   keyName: string | undefined,
   keyNameFromDefinition: string | undefined,
   set: (ast: AST) => AST
@@ -91,6 +91,14 @@ function parseNonLiteral(
         params: schema.anyOf!.map(_ => parse(_, options, rootSchema, undefined, true, processed, usedNames)),
         standaloneName: standaloneName(schema, keyNameFromDefinition, usedNames),
         type: 'UNION'
+      })
+    case 'CONST':
+      return set({
+        comment: schema.description,
+        keyName,
+        params: schema.const,
+        standaloneName: keyNameFromDefinition,
+        type: 'CONST'
       })
     case 'BOOLEAN':
       return set({
@@ -172,7 +180,7 @@ function parseNonLiteral(
       return set({
         comment: schema.description,
         keyName,
-        params: (schema.type as JSONSchema4TypeName[]).map(_ => parse({ type: _ }, options, rootSchema, undefined, true, processed, usedNames)),
+        params: (schema.type as JSONSchema6TypeName[]).map(_ => parse({ type: _ }, options, rootSchema, undefined, true, processed, usedNames)),
         standaloneName: standaloneName(schema, keyNameFromDefinition, usedNames),
         type: 'UNION'
       })
@@ -205,7 +213,7 @@ function standaloneName(
   keyNameFromDefinition: string | undefined,
   usedNames: UsedNames
 ) {
-  let name = schema.title || schema.id || keyNameFromDefinition
+  let name = schema.title || schema['$id'] || keyNameFromDefinition
   if (name) {
     return generateName(name, usedNames)
   }
@@ -226,42 +234,8 @@ function newInterface(
     keyName,
     params: parseSchema(schema, options, rootSchema, processed, usedNames, name),
     standaloneName: name,
-    superTypes: parseSuperTypes(schema, options, processed, usedNames),
     type: 'INTERFACE'
   }
-}
-
-function parseSuperTypes(
-  schema: SchemaSchema,
-  options: Options,
-  processed: Processed,
-  usedNames: UsedNames
-): TNamedInterface[] {
-  // Type assertion needed because of dereferencing step
-  // TODO: Type it upstream
-  const superTypes = schema.extends as SchemaSchema | SchemaSchema[] | undefined
-  if (!superTypes) {
-    return []
-  }
-  if (Array.isArray(superTypes)) {
-    return superTypes.map(_ => newNamedInterface(_, options, _, processed, usedNames))
-  }
-  return [newNamedInterface(superTypes, options, superTypes, processed, usedNames)]
-}
-
-function newNamedInterface(
-  schema: SchemaSchema,
-  options: Options,
-  rootSchema: JSONSchema,
-  processed: Processed,
-  usedNames: UsedNames
-): TNamedInterface {
-  const namedInterface = newInterface(schema, options, rootSchema, processed, usedNames)
-  if (hasStandaloneName(namedInterface)) {
-    return namedInterface
-  }
-  // TODO: Generate name if it doesn't have one
-  throw error('Supertype must have standalone name!', namedInterface)
 }
 
 /**
